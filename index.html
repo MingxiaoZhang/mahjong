@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Image via Socket.IO</title>
+  <!-- Load the Socket.IO client library from a CDN -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Upload Image</h1>
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="uploadButton">Upload Image</button>
+  <p id="status"></p>
+  
+  <script>
+    // Connect to the Socket.IO server at localhost on port 5000.
+    const socket = io("http://localhost:5000");
+    
+    socket.on("connect", () => {
+      console.log("Connected to server");
+    });
+    
+    // Listen for an acknowledgment from the server.
+    socket.on("upload_ack", (data) => {
+      const statusElem = document.getElementById("status");
+      if (data.status === "success") {
+        statusElem.textContent = "Image uploaded successfully!";
+      } else {
+        statusElem.textContent = "Upload failed: " + data.error;
+      }
+    });
+    
+    // When the upload button is clicked...
+    document.getElementById("uploadButton").addEventListener("click", () => {
+      const fileInput = document.getElementById("fileInput");
+      if (fileInput.files.length === 0) {
+        alert("Please select an image file.");
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const arrayBuffer = e.target.result;
+        // Emit the binary data using the custom event "upload_image".
+        socket.emit("upload_image", arrayBuffer);
+      };
+      
+      // Read the file as an ArrayBuffer (raw binary data).
+      reader.readAsArrayBuffer(file);
+    });
+    
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server");
+    });
+  </script>
+</body>
+</html>
