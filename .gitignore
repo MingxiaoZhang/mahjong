@@ -174,3 +174,7 @@ cython_debug/
 .pypirc
 
 myenv
+
+venv
+
+*.zip
